@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { dbProfile } from './config/database';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -12,12 +13,21 @@ async function bootstrap() {
   app.enableCors();
 
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
-  prefix: '/uploads',
-});
+    prefix: '/uploads',
+  });
+
+  // CONNECT + AUTO CREATE TABLES
+  await dbProfile.authenticate();
+  console.log('Database connected');
+
+  await dbProfile.sync({ alter: true });
+  console.log('Database synchronized');
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
+
   console.log(`🚀 Server running on http://localhost:${port}/api`);
-  console.log(`📁 Static files  : http://localhost:${port}/uploads`);
+  console.log(`📁 Static files: http://localhost:${port}/uploads`);
 }
+
 bootstrap();
